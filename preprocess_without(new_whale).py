@@ -27,7 +27,7 @@ import warnings
 
 df_train = pd.read_csv('train_processed.csv')
 # df_train = df_train[df_train['Id']!='new_whale']
-# df_train = df_train.head(100)
+df_train = df_train.head(10000)
 print(df_train.head())
 print(df_train.shape)
 
