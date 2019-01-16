@@ -108,7 +108,7 @@ def top_5_accuracy(y_true, y_pred):
     return top_k_categorical_accuracy(y_true, y_pred, k=5)
 
 # 定义网络框架
-base_model = vgg19(input_shape=(img_size, img_size, 3),weights='imagenet', include_top=False) # 预先要下载no_top模型
+base_model = InceptionV3(input_shape=(img_size, img_size, 3),weights='imagenet', include_top=False) # 预先要下载no_top模型
 model = add_new_last_layer(base_model, nb_classes)              # 从基本no_top模型上添加新层
 setup_to_transfer_learn(model, base_model)
 
@@ -138,7 +138,7 @@ early_stopping = EarlyStopping(monitor='val_loss', mode='min', restore_best_weig
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3)
 
 callback = [reduce_lr]
-adam_z = optimizers.adam(lr=0.01)
+adam_z = optimizers.SGD(lr=0.01)
 model.compile(optimizer=adam_z, loss='categorical_crossentropy', metrics=[categorical_crossentropy, categorical_accuracy, top_5_accuracy])
 history = model.fit(X, y, epochs=20, batch_size=2, verbose=1, validation_split=0.1, callbacks=callback)
 
