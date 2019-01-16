@@ -19,7 +19,7 @@ import warnings
 
 # df_train = pd.read_csv('../train.csv')
 df_train = pd.read_csv('train.csv')
-df_train = df_train.head(1000)
+# df_train = df_train.head(10)
 
 
 img_size = 224
@@ -72,7 +72,7 @@ from keras.layers import Dense
 from keras.metrics import categorical_accuracy, top_k_categorical_accuracy, categorical_crossentropy
 from keras import optimizers
 
-nb_classes = 517
+nb_classes = 5005
 FC_SIZE = 1024  # 全连接层的节点个数
 NB_IV3_LAYERS_TO_FREEZE = 120  # 冻结层的数量
 
@@ -140,13 +140,16 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3)
 callback = [reduce_lr]
 adam_z = optimizers.adam(lr=0.01)
 model.compile(optimizer=adam_z, loss='categorical_crossentropy', metrics=[categorical_crossentropy, categorical_accuracy, top_5_accuracy])
-history = model.fit(X, y, epochs=20, batch_size=1, verbose=1, validation_split=0.2, callbacks=callback)
+history = model.fit(X, y, epochs=10, batch_size=1, verbose=1, validation_split=0.2, callbacks=callback)
+
+model.save('white_model.h5')
 
 plt.plot(history.history['top_5_accuracy'])
 plt.plot(history.history['val_top_5_accuracy'])
+plt.legend(['top_5_accuracy','val_top_5_accuracy'], loc='upper right')
 plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
-plt.savefig('black/white_1.jpg')
+plt.savefig('white_1.jpg')
 
-model.save('black/white_model.h5')
+
