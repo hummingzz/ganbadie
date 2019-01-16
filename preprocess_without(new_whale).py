@@ -80,7 +80,7 @@ from keras.layers import Dense
 from keras.metrics import categorical_accuracy, top_k_categorical_accuracy, categorical_crossentropy
 from keras import optimizers
 
-nb_classes = 5004
+nb_classes = 4363
 FC_SIZE = 1024  # 全连接层的节点个数
 NB_IV3_LAYERS_TO_FREEZE = 50  # 冻结层的数量
 
@@ -150,11 +150,14 @@ adam_z = optimizers.adam(lr=0.01)
 model.compile(optimizer=adam_z, loss='categorical_crossentropy', metrics=[categorical_crossentropy, categorical_accuracy, top_5_accuracy])
 history = model.fit(X, y, epochs=20, batch_size=1, verbose=1, validation_split=0.2, callbacks=callback)
 
+model.save('enhanced_model.h5')
+
 plt.plot(history.history['top_5_accuracy'])
 plt.plot(history.history['val_top_5_accuracy'])
+plt.legend(['top_5_accuracy','val_top_5_accuracy'], loc='upper right')
 plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.savefig('enhance_1.jpg')
 
-model.save('enhanced_model.h5')
+
