@@ -27,9 +27,14 @@ import warnings
 
 df_train = pd.read_csv('train_processed.csv')
 # df_train = df_train[df_train['Id']!='new_whale']
-df_train = df_train.head(10000)
+# df_train = df_train.head(20000)
 print(df_train.head())
 print(df_train.shape)
+unique = pd.value_counts(df_train.Id)
+print(unique.head())
+num_classes = unique.values.shape[0]
+print(unique.values)
+print(num_classes)
 
 img_size = 224
 
@@ -80,7 +85,7 @@ from keras.layers import Dense
 from keras.metrics import categorical_accuracy, top_k_categorical_accuracy, categorical_crossentropy
 from keras import optimizers
 
-nb_classes = 4363
+nb_classes = 5005
 FC_SIZE = 1024  # 全连接层的节点个数
 NB_IV3_LAYERS_TO_FREEZE = 50  # 冻结层的数量
 
@@ -116,7 +121,7 @@ def top_5_accuracy(y_true, y_pred):
     return top_k_categorical_accuracy(y_true, y_pred, k=5)
 
 # 定义网络框架
-base_model = InceptionV3(input_shape=(img_size, img_size, 3),weights='imagenet', include_top=False) # 预先要下载no_top模型
+base_model = ResNet50(input_shape=(img_size, img_size, 3),weights='imagenet', include_top=False) # 预先要下载no_top模型
 model = add_new_last_layer(base_model, nb_classes)              # 从基本no_top模型上添加新层
 setup_to_transfer_learn(model, base_model)
 
@@ -150,7 +155,7 @@ adam_z = optimizers.adam(lr=0.01)
 model.compile(optimizer=adam_z, loss='categorical_crossentropy', metrics=[categorical_crossentropy, categorical_accuracy, top_5_accuracy])
 history = model.fit(X, y, epochs=20, batch_size=1, verbose=1, validation_split=0.2, callbacks=callback)
 
-model.save('enhanced_model.h5')
+model.save('resnet_enhanced_model.h5')
 
 plt.plot(history.history['top_5_accuracy'])
 plt.plot(history.history['val_top_5_accuracy'])
@@ -158,6 +163,6 @@ plt.legend(['top_5_accuracy','val_top_5_accuracy'], loc='upper right')
 plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
-plt.savefig('enhance_1.jpg')
+plt.savefig('resnet_enhance_1.jpg')
 
 
