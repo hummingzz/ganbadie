@@ -96,14 +96,14 @@ train_datagen = ImageDataGenerator(
 
 test_datagen = ImageDataGenerator(rescale=1./255)
 
-train_generator = train_datagen.flow_from_directory(dataframe = df_train,
+train_generator = train_datagen.flow_from_dataframe(dataframe = df_train,
         directory='../home/lchn_guo/projects/WhalesServer/generated_train/',
         x_col='Image', y_col='Id',
         target_size=(224, 224),
         batch_size=32,
         )
 
-validation_generator = test_datagen.flow_from_directory(dataframe=df_test,
+validation_generator = test_datagen.flow_from_dataframe(dataframe=df_test,
         directory='../home/lchn_guo/projects/WhalesServer/generated_train/test/',
         x_col='Image', y_col='Id',
         target_size=(224, 224),
