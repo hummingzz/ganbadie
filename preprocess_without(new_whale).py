@@ -25,16 +25,23 @@ import warnings
 
 
 
-df_train = pd.read_csv('train_processed.csv')
+# df_train = pd.read_csv('train_processed.csv')
+df = pd.read_csv('train_processed.csv')
+df_train = df.sample(frac=0.9,random_state=0)
+print(df_train.index)
+df_test = df.drop(df_train.index)
+print(df_test.shape)
 # df_train = df_train[df_train['Id']!='new_whale']
 # df_train = df_train.head(20000)
 print(df_train.head())
 print(df_train.shape)
-unique = pd.value_counts(df_train.Id)
-print(unique.head())
-num_classes = unique.values.shape[0]
-print(unique.values)
-print(num_classes)
+
+
+# unique = pd.value_counts(df_train.Id)
+# print(unique.head())
+# num_classes = unique.values.shape[0]
+# print(unique.values)
+# print(num_classes)
 
 img_size = 224
 
@@ -72,22 +79,14 @@ def prepare_labels(y):
     return y, label_encoder
 
 # X = prepareImages(df_train, df_train.shape[0], "../train")
-X = prepareImages(df_train, df_train.shape[0], "../home/lchn_guo/projects/WhalesServer/generated_train")
-X /= 255
+# X = prepareImages(df_train, df_train.shape[0], "../home/lchn_guo/projects/WhalesServer/generated_train")
+# X /= 255
 
 from keras.preprocessing.image import ImageDataGenerator
 
-train_datagen = ImageDataGenerator(
-    rescale=1./255,
-    shear_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True,
-    rotation_range=90,
-    featurewise_center=True,
-    width_shift_range=0.2,
-    height_shift_range=0.2)
 
-train_datagen.fit(X)
+
+
 
 train_datagen = ImageDataGenerator(
         rescale=1./255,
@@ -95,25 +94,25 @@ train_datagen = ImageDataGenerator(
         zoom_range=0.2,
         horizontal_flip=True)
 
-train_datagen.fit(X)
+test_datagen = ImageDataGenerator(rescale=1./255)
 
-def valid_generator(batch_size, data, target):
-    while True:
-        for kk in range(0, data.shape[0], batch_size):
-            start = kk
-            end = min(start + batch_size, data.shape[0])
-            x = data[start:end]
-            y = target[start:end]
-            yield x, y
+train_generator = train_datagen.flow_from_directory(dataframe = df_train,
+        directory='../home/lchn_guo/projects/WhalesServer/generated_train/',
+        x_col='Image', y_col='Id',
+        target_size=(224, 224),
+        batch_size=32,
+        )
 
+validation_generator = test_datagen.flow_from_directory(dataframe=df_test,
+        directory='../home/lchn_guo/projects/WhalesServer/generated_train/test/',
+        x_col='Image', y_col='Id',
+        target_size=(224, 224),
+        batch_size=32,
+        )
 
-BATCH_SIZE = 32
-val_set_number = np.random.choice(X.shape[0], 2000)
-valid_datagen = valid_generator(BATCH_SIZE, X[val_set_number], y[val_set_number])
-
-y, label_encoder = prepare_labels(df_train['Id'])
-
-print(y.shape)
+# y, label_encoder = prepare_labels(df_train['Id'])
+#
+# print(y.shape)
 
 from keras.applications.resnet50 import ResNet50
 from keras.applications.inception_v3 import InceptionV3
@@ -157,7 +156,7 @@ def top_5_accuracy(y_true, y_pred):
     return top_k_categorical_accuracy(y_true, y_pred, k=5)
 
 # 定义网络框架
-base_model = ResNet50(input_shape=(img_size, img_size, 3),weights='imagenet', include_top=False) # 预先要下载no_top模型
+base_model = InceptionV3(input_shape=(img_size, img_size, 3),weights='imagenet', include_top=False) # 预先要下载no_top模型
 model = add_new_last_layer(base_model, nb_classes)              # 从基本no_top模型上添加新层
 setup_to_transfer_learn(model, base_model)
 
@@ -190,12 +189,16 @@ callback = [reduce_lr]
 adam_z = optimizers.adam(lr=0.01)
 model.compile(optimizer=adam_z, loss='categorical_crossentropy', metrics=[categorical_crossentropy, categorical_accuracy, top_5_accuracy])
 # history = model.fit(X, y, epochs=20, batch_size=1, verbose=1, validation_split=0.2, callbacks=callback)
-EPOCHS = 20
-history = model.fit_generator(train_datagen.flow(X, y, batch_size=BATCH_SIZE), validation_data=valid_datagen, validation_steps=X.shape[0] // BATCH_SIZE,
-                   steps_per_epoch = X.shape[0] // BATCH_SIZE,
-                   epochs=EPOCHS, verbose=1, callbacks=callback)
 
-model.save('resnet_enhanced_model.h5')
+history = model.fit_generator(
+        train_generator,
+        steps_per_epoch=2000,
+        epochs=50,
+        validation_data=validation_generator,
+        validation_steps=800)
+
+
+model.save('full_enhanced_model.h5')
 
 plt.plot(history.history['top_5_accuracy'])
 plt.plot(history.history['val_top_5_accuracy'])
@@ -203,6 +206,6 @@ plt.legend(['top_5_accuracy','val_top_5_accuracy'], loc='upper right')
 plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
-plt.savefig('resnet_enhance_1.jpg')
+plt.savefig('full_enhance_1.jpg')
 
 
