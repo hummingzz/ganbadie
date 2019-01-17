@@ -75,6 +75,42 @@ def prepare_labels(y):
 X = prepareImages(df_train, df_train.shape[0], "../home/lchn_guo/projects/WhalesServer/generated_train")
 X /= 255
 
+from keras.preprocessing.image import ImageDataGenerator
+
+train_datagen = ImageDataGenerator(
+    rescale=1./255,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    rotation_range=90,
+    featurewise_center=True,
+    width_shift_range=0.2,
+    height_shift_range=0.2)
+
+train_datagen.fit(X)
+
+train_datagen = ImageDataGenerator(
+        rescale=1./255,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True)
+
+train_datagen.fit(X)
+
+def valid_generator(batch_size, data, target):
+    while True:
+        for kk in range(0, data.shape[0], batch_size):
+            start = kk
+            end = min(start + batch_size, data.shape[0])
+            x = data[start:end]
+            y = target[start:end]
+            yield x, y
+
+
+BATCH_SIZE = 32
+val_set_number = np.random.choice(X.shape[0], 2000)
+valid_datagen = valid_generator(BATCH_SIZE, X[val_set_number], y[val_set_number])
+
 y, label_encoder = prepare_labels(df_train['Id'])
 
 print(y.shape)
@@ -153,7 +189,11 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3)
 callback = [reduce_lr]
 adam_z = optimizers.adam(lr=0.01)
 model.compile(optimizer=adam_z, loss='categorical_crossentropy', metrics=[categorical_crossentropy, categorical_accuracy, top_5_accuracy])
-history = model.fit(X, y, epochs=20, batch_size=1, verbose=1, validation_split=0.2, callbacks=callback)
+# history = model.fit(X, y, epochs=20, batch_size=1, verbose=1, validation_split=0.2, callbacks=callback)
+EPOCHS = 20
+history = model.fit_generator(train_datagen.flow(X, y, batch_size=BATCH_SIZE), validation_data=valid_datagen, validation_steps=X.shape[0] // BATCH_SIZE,
+                   steps_per_epoch = X.shape[0] // BATCH_SIZE,
+                   epochs=EPOCHS, verbose=1, callbacks=callback)
 
 model.save('resnet_enhanced_model.h5')
 
