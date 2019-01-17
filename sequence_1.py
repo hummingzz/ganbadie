@@ -11,6 +11,6 @@ print(df_test.shape)
 # np.arange(len(df)*0.9)
 
 for i in df_test['Image']:
-    shutil.move('../home/lchn_guo/projects/WhalesServer/generated_train/'+ str(i) ,'../home/lchn_guo/projects/WhalesServer/generated_train/test/' + str(i))
+    shutil.move('../home/lchn_guo/projects/WhalesServer/generated_train/test/' + str(i) , '../home/lchn_guo/projects/WhalesServer/generated_train/'+ str(i) )
 
 #shutil.move('white_1.jpg', './New_data/move_1.jpg')
