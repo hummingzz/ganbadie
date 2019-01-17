@@ -108,7 +108,7 @@ def top_5_accuracy(y_true, y_pred):
     return top_k_categorical_accuracy(y_true, y_pred, k=5)
 
 # 定义网络框架
-base_model = InceptionV3(input_shape=(img_size, img_size, 3),weights='imagenet', include_top=False) # 预先要下载no_top模型
+base_model = ResNet50(input_shape=(img_size, img_size, 3),weights='imagenet', include_top=False) # 预先要下载no_top模型
 model = add_new_last_layer(base_model, nb_classes)              # 从基本no_top模型上添加新层
 setup_to_transfer_learn(model, base_model)
 
@@ -142,7 +142,7 @@ adam_z = optimizers.SGD(lr=0.01)
 model.compile(optimizer=adam_z, loss='categorical_crossentropy', metrics=[categorical_crossentropy, categorical_accuracy, top_5_accuracy])
 history = model.fit(X, y, epochs=20, batch_size=2, verbose=1, validation_split=0.1, callbacks=callback)
 
-model.save('white_model.h5')
+model.save('resnet_white_model.h5')
 
 plt.plot(history.history['top_5_accuracy'])
 plt.plot(history.history['val_top_5_accuracy'])
@@ -150,6 +150,6 @@ plt.legend(['top_5_accuracy','val_top_5_accuracy'], loc='upper right')
 plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
-plt.savefig('white_1.jpg')
+plt.savefig('resnet_white_1.jpg')
 
 
